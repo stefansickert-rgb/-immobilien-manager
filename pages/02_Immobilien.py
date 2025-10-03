@@ -1,3 +1,4 @@
+from core.auth import require_login; _authctx = require_login()
 import streamlit as st
 import pandas as pd
 import datetime as dt

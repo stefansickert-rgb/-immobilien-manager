@@ -1,3 +1,4 @@
+from core.auth import require_login; _authctx = require_login()
 import streamlit as st
 from core.db import SessionCtx, MaintenanceTask
 from core.queries import df_properties, df_tasks, reset_caches

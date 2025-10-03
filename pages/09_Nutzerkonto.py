@@ -1,3 +1,4 @@
+from core.auth import require_login; _authctx = require_login()
 import re
 import streamlit as st
 from sqlalchemy import select

@@ -1,3 +1,4 @@
+from core.auth import require_login; _authctx = require_login()
 import streamlit as st
 import pandas as pd
 from core.i18n import t
@@ -6,6 +7,8 @@ st.header("Versionen")
 
 # Schlanker, sauberer Changelog (ältere Einträge wurden konsolidiert)
 HISTORY = [
+    {"version": "5.1.6", "timestamp": "2025-10-03 21:20:38", "changes": "CSS-Toggle: Sidebar-Navigation ausgeblendet bis Login."},
+    
     {"version": "5.1.4", "timestamp": "2025-10-03 20:58:45", "changes": "Eigener Login (ohne streamlit-authenticator); Fehler behoben; Version sichtbar."},
     
     {"version": "5.1.3", "timestamp": "2025-10-03 20:44:39", "changes": "Fix: streamlit-authenticator location-Fehler; Fallback auf 'sidebar'; History nachgetragen."},

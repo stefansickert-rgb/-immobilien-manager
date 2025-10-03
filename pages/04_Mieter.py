@@ -1,3 +1,4 @@
+from core.auth import require_login; _authctx = require_login()
 import streamlit as st
 from sqlalchemy import select, func
 from core.db import SessionCtx, Tenant, Lease

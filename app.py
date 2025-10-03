@@ -1,4 +1,4 @@
-# --- Build Version: v5.1.4 | generated 2025-10-03 20:58:45 ---
+# --- Build Version: v5.1.6 | generated 2025-10-03 21:20:38 ---
 import datetime as dt
 import streamlit as st
 from core.db import init_db, SessionCtx, UserProfile, get_engine
@@ -9,6 +9,93 @@ init_db(schema_version=8)
 
 # Seiten-Setup
 st.set_page_config(page_title=t("app_title"), page_icon="🏠", layout="wide")
+
+# Sidebar-Navigation verstecken, solange nicht eingeloggt
+def _hide_nav_when_logged_out():
+    import streamlit as st
+    if not st.session_state.get("auth"):
+        st.markdown("""
+            <style>
+              [data-testid="stSidebarNav"] { display: none !important; }
+              [data-testid="stSidebar"] [data-testid="stSidebarNav"] ~ div { display: none !important; }
+            </style>
+        """, unsafe_allow_html=True)
+
+_hide_nav_when_logged_out()
+
+# ----------------------- SIMPLE LOGIN GATE -----------------------
+import streamlit as st
+from core.db import ensure_admin_user, SessionCtx, User
+from core.auth import hash_password, verify_password
+
+try:
+    ensure_admin_user("hannes", hash_password("hannes"), role="admin", email=None, full_name="hannes")
+except Exception:
+    pass
+
+def _do_login(u, p):
+    with SessionCtx() as s:
+        user = s.query(User).filter(User.username == u, User.is_active == True).one_or_none()
+        if user and verify_password(p, user.password_hash):
+            st.session_state.auth = {"username": user.username, "name": user.full_name or user.username, "role": user.role}
+            return True
+    return False
+
+def _do_register(u, mail, name, p1, p2):
+    if not u or not p1:
+        return "Bitte Benutzername und Passwort ausfüllen."
+    if p1 != p2:
+        return "Passwörter stimmen nicht überein."
+    with SessionCtx() as s:
+        exists = s.query(User).filter(User.username == u).one_or_none()
+        if exists:
+            return "Benutzername ist bereits vergeben."
+        s.add(User(username=u, email=mail or None, full_name=name or u, password_hash=hash_password(p1), role="viewer", is_active=True))
+        s.commit()
+    return None
+
+if not st.session_state.get("auth"):
+    st.subheader("Willkommen – bitte anmelden oder registrieren")
+    tab_login, tab_register = st.tabs(["Anmelden", "Registrieren"])
+    with tab_login:
+        with st.form("login_form", clear_on_submit=False):
+            col1, col2 = st.columns(2)
+            with col1:
+                u = st.text_input("Benutzername", value="", key="login_user")
+            with col2:
+                p = st.text_input("Passwort", type="password", value="", key="login_pass")
+            ok = st.form_submit_button("Anmelden")
+        if ok:
+            if _do_login(u.strip(), p):
+                st.success("Erfolgreich angemeldet.")
+                st.rerun()
+            else:
+                st.error("Benutzername oder Passwort falsch.")
+    with tab_register:
+        with st.form("register_form"):
+            u2 = st.text_input("Benutzername")
+            name2 = st.text_input("Vollständiger Name", value="")
+            mail2 = st.text_input("E-Mail (optional)", value="")
+            c1, c2 = st.columns(2)
+            with c1:
+                p1 = st.text_input("Passwort", type="password")
+            with c2:
+                p2 = st.text_input("Passwort wiederholen", type="password")
+            okr = st.form_submit_button("Registrieren")
+        if okr:
+            err = _do_register(u2.strip(), mail2.strip(), name2.strip(), p1, p2)
+            if err:
+                st.error(err)
+            else:
+                st.success("Registrierung erfolgreich – bitte jetzt anmelden.")
+    st.stop()
+
+with st.sidebar:
+    st.caption(f"Eingeloggt als: **{st.session_state['auth']['username']}**")
+    if st.button("Logout"):
+        st.session_state.pop("auth", None)
+        st.rerun()
+# -----------------------------------------------------------------
 
 # ----------------------- SIMPLE LOGIN GATE -----------------------
 import streamlit as st
@@ -51,41 +138,6 @@ with st.sidebar:
         st.session_state.pop("auth", None)
         st.rerun()
 # -----------------------------------------------------------------
-
-# ----------------------- AUTHENTICATION GATE (robust) -----------------------
-import os, streamlit as st
-try:
-    from core.db import ensure_admin_user, load_credentials_for_auth
-except Exception:
-    # Fallback: define dummy creds
-    def ensure_admin_user(*args, **kwargs): pass
-    def load_credentials_for_auth(): return {"usernames": {}}
-from core.auth import hash_password
-
-COOKIE_NAME = os.getenv("AUTH_COOKIE_NAME", "immo_auth")
-COOKIE_KEY  = os.getenv("AUTH_COOKIE_KEY", "change-this-dev-key")
-COOKIE_DAYS = int(os.getenv("AUTH_COOKIE_DAYS", "30"))
-
-# Default admin bootstrap (hannes/hannes)
-try:
-    ensure_admin_user("hannes", hash_password("hannes"), role="admin", email=None, full_name="hannes")
-except Exception as _e:
-    st.warning("Admin-Bootstrap konnte nicht ausgeführt werden. Prüfe Datenbank-Setup.")
-
-_credentials = load_credentials_for_auth()
-_auth = stauth.Authenticate(_credentials, COOKIE_NAME, COOKIE_KEY, COOKIE_DAYS)
-
-try:
-    name, auth_status, username = _auth.login('Login', location='main')
-except Exception:
-    name, auth_status, username = _auth.login('Login', location='sidebar')
-if auth_status != True:
-    st.stop()
-
-with st.sidebar:
-    _auth.logout("Logout")
-    st.caption(f"Eingeloggt als: **{username}**")
-# ---------------------------------------------------------------------------
 
 # --- Hide Wohnung-Detail page entry robustly ---
 st.markdown(
