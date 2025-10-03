@@ -6,6 +6,10 @@ st.header("Versionen")
 
 # Schlanker, sauberer Changelog (ältere Einträge wurden konsolidiert)
 HISTORY = [
+    {"version": "5.1.3", "timestamp": "2025-10-03 20:44:39", "changes": "Fix: streamlit-authenticator location-Fehler; Fallback auf 'sidebar'; History nachgetragen."},
+    
+    {"version": "5.1.1", "timestamp": "2025-10-03 20:44:39", "changes": "Version-Header in app.py; Packaging flach."},
+    
     {"version": "5.1.2", "timestamp": "2025-10-03 20:29:17", "changes": "Login-Gate robust fix; Version im Startbildschirm; History-Entry ergänzt."},
     
     {"version": "4.28.7", "timestamp": "2025-09-26 20:50:43", "changes": "Mieter: Demodaten komplett neu generiert (Telefon, E-Mail, Bemerkungen, Geburtsdatum, Avatar) und bestehende überschrieben."},

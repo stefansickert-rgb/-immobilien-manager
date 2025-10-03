@@ -1,4 +1,4 @@
-# --- Build Version: v5.1.2 | generated 2025-10-03 20:29:17 ---
+# --- Build Version: v5.1.3 | generated 2025-10-03 20:44:39 ---
 import datetime as dt
 import streamlit as st
 from core.db import init_db, SessionCtx, UserProfile, get_engine
@@ -34,7 +34,10 @@ except Exception as _e:
 _credentials = load_credentials_for_auth()
 _auth = stauth.Authenticate(_credentials, COOKIE_NAME, COOKIE_KEY, COOKIE_DAYS)
 
-name, auth_status, username = _auth.login("Login", "main")
+try:
+    name, auth_status, username = _auth.login('Login', location='main')
+except Exception:
+    name, auth_status, username = _auth.login('Login', location='sidebar')
 if auth_status != True:
     st.stop()
 
