@@ -1,3 +1,4 @@
+# --- Build Version: v5.1.1 | generated 2025-10-03 20:09:39 ---
 import datetime as dt
 import streamlit as st
 from core.db import init_db, SessionCtx, UserProfile, get_engine

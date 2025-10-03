@@ -6,8 +6,6 @@ st.header("Versionen")
 
 # Schlanker, sauberer Changelog (ältere Einträge wurden konsolidiert)
 HISTORY = [
-    {"version": "5.1.0", "timestamp": "2025-10-03 17:02:32", "changes": "Login-Gate + Admin hannes/hannes"},
-    
     {"version": "4.28.7", "timestamp": "2025-09-26 20:50:43", "changes": "Mieter: Demodaten komplett neu generiert (Telefon, E-Mail, Bemerkungen, Geburtsdatum, Avatar) und bestehende überschrieben."},
     
     {"version": "4.28.5", "timestamp": "2025-09-26 20:36:30", "changes": "Immobilien: Mietername in Wohnungs-Tabelle als Link zur Mieter-Detailansicht. Mieter: Tabelle mit klickbaren Namen und Detailbereich reaktiviert. DB: Tenant birth_date/photo Felder inkl. Migration."},
