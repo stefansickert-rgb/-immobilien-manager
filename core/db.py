@@ -429,3 +429,49 @@ Geburtsdatum, Foto) mit Demodaten. Existierende Werte werden nicht überschriebe
             s.commit()
     return True
 
+
+
+class User(BaseModel):
+    __tablename__ = "users"
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=True)
+    full_name = Column(String, nullable=True)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, default="admin")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(Date, default=dt.date.today)
+
+
+def ensure_admin_user(username: str, password_hash: str, role: str = "admin", email: str | None = None, full_name: str | None = None):
+    with SessionCtx() as s:
+        u = s.query(User).filter(User.username == username).one_or_none()
+        if u is None:
+            s.add(User(username=username, email=email, full_name=full_name or username, password_hash=password_hash, role=role, is_active=True))
+            s.commit()
+        else:
+            if not u.password_hash:
+                u.password_hash = password_hash
+            if not u.role:
+                u.role = role
+            if not u.is_active:
+                u.is_active = True
+            s.commit()
+
+def load_credentials_for_auth():
+    with SessionCtx() as s:
+        cred = {"usernames": {}}
+        for u in s.query(User).filter(User.is_active == True).all():
+            cred["usernames"][u.username] = {
+                "name": u.full_name or u.username,
+                "email": u.email or "",
+                "password": u.password_hash,
+            }
+        return cred
+
+def _post_models_create_all():
+    try:
+        Base.metadata.create_all(get_engine())
+    except Exception:
+        pass
+
+_post_models_create_all()

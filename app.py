@@ -1,4 +1,4 @@
-# --- Build Version: v5.1.1 | generated 2025-10-03 20:09:39 ---
+# --- Build Version: v5.1.2 | generated 2025-10-03 20:29:17 ---
 import datetime as dt
 import streamlit as st
 from core.db import init_db, SessionCtx, UserProfile, get_engine
@@ -9,6 +9,39 @@ init_db(schema_version=8)
 
 # Seiten-Setup
 st.set_page_config(page_title=t("app_title"), page_icon="🏠", layout="wide")
+
+# ----------------------- AUTHENTICATION GATE (robust) -----------------------
+import os, streamlit as st
+import streamlit_authenticator as stauth
+try:
+    from core.db import ensure_admin_user, load_credentials_for_auth
+except Exception:
+    # Fallback: define dummy creds
+    def ensure_admin_user(*args, **kwargs): pass
+    def load_credentials_for_auth(): return {"usernames": {}}
+from core.auth import hash_password
+
+COOKIE_NAME = os.getenv("AUTH_COOKIE_NAME", "immo_auth")
+COOKIE_KEY  = os.getenv("AUTH_COOKIE_KEY", "change-this-dev-key")
+COOKIE_DAYS = int(os.getenv("AUTH_COOKIE_DAYS", "30"))
+
+# Default admin bootstrap (hannes/hannes)
+try:
+    ensure_admin_user("hannes", hash_password("hannes"), role="admin", email=None, full_name="hannes")
+except Exception as _e:
+    st.warning("Admin-Bootstrap konnte nicht ausgeführt werden. Prüfe Datenbank-Setup.")
+
+_credentials = load_credentials_for_auth()
+_auth = stauth.Authenticate(_credentials, COOKIE_NAME, COOKIE_KEY, COOKIE_DAYS)
+
+name, auth_status, username = _auth.login("Login", "main")
+if auth_status != True:
+    st.stop()
+
+with st.sidebar:
+    _auth.logout("Logout")
+    st.caption(f"Eingeloggt als: **{username}**")
+# ---------------------------------------------------------------------------
 
 # --- Hide Wohnung-Detail page entry robustly ---
 st.markdown(

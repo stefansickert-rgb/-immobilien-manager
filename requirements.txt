@@ -4,3 +4,7 @@ SQLAlchemy>=2.0
 Pillow>=10.0
 openpyxl>=3.1   # falls Excel-Export genutzt wird
 python-dateutil # wird indirekt von pandas genutzt, schadet nicht
+
+streamlit-authenticator
+bcrypt
+extra-streamlit-components
