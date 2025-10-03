@@ -1,4 +1,4 @@
-# --- Build Version: v5.1.3 | generated 2025-10-03 20:44:39 ---
+# --- Build Version: v5.1.4 | generated 2025-10-03 20:58:45 ---
 import datetime as dt
 import streamlit as st
 from core.db import init_db, SessionCtx, UserProfile, get_engine
@@ -10,9 +10,50 @@ init_db(schema_version=8)
 # Seiten-Setup
 st.set_page_config(page_title=t("app_title"), page_icon="🏠", layout="wide")
 
+# ----------------------- SIMPLE LOGIN GATE -----------------------
+import streamlit as st
+from core.db import ensure_admin_user, SessionCtx, User
+from core.auth import hash_password, verify_password
+
+try:
+    ensure_admin_user("hannes", hash_password("hannes"), role="admin", email=None, full_name="hannes")
+except Exception:
+    pass
+
+def _do_login(u, p):
+    with SessionCtx() as s:
+        user = s.query(User).filter(User.username == u, User.is_active == True).one_or_none()
+        if user and verify_password(p, user.password_hash):
+            st.session_state.auth = {"username": user.username, "name": user.full_name or user.username, "role": user.role}
+            return True
+    return False
+
+if not st.session_state.get("auth"):
+    st.subheader("Login")
+    with st.form("login_form", clear_on_submit=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            u = st.text_input("Benutzername", value="", key="login_user")
+        with col2:
+            p = st.text_input("Passwort", type="password", value="", key="login_pass")
+        ok = st.form_submit_button("Anmelden")
+    if ok:
+        if _do_login(u.strip(), p):
+            st.success("Erfolgreich angemeldet.")
+            st.rerun()
+        else:
+            st.error("Benutzername oder Passwort falsch.")
+    st.stop()
+
+with st.sidebar:
+    st.caption(f"Eingeloggt als: **{st.session_state['auth']['username']}**")
+    if st.button("Logout"):
+        st.session_state.pop("auth", None)
+        st.rerun()
+# -----------------------------------------------------------------
+
 # ----------------------- AUTHENTICATION GATE (robust) -----------------------
 import os, streamlit as st
-import streamlit_authenticator as stauth
 try:
     from core.db import ensure_admin_user, load_credentials_for_auth
 except Exception:
